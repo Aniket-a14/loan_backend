@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductType {
+  personal
+  education
+  vehicle
+  home
+  credit_line
+  debt_consolidation
+}
+
+enum Role {
+  user
+  assistant
+}
+
+model Product {
+  id                String       @id @default(uuid()) @db.Uuid
+  name              String
+  bank              String
+  type              ProductType
+  rate_apr          Decimal
+  min_income        Decimal
+  min_credit_score  Int
+  tenure_min_months Int
+  tenure_max_months Int
+  processing_fee_pct Decimal
+  prepayment_allowed Boolean
+  disbursal_speed   String
+  docs_level        String
+  summary           String
+  faq               Json
+  terms             Json
+  
+  chatMessages      AiChatMessage[]
+
+  @@map("products")
+}
+
+model User {
+  id            String          @id @default(uuid()) @db.Uuid
+  email         String          @unique
+  password_hash String
+  display_name  String
+  
+  chatMessages  AiChatMessage[]
+
+  @@map("users")
+}
+
+model AiChatMessage {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  product_id String   @db.Uuid
+  role       Role
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+
+  @@map("ai_chat_messages")
+}
